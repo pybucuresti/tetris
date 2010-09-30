@@ -6,4 +6,5 @@ setup(
     install_requires=[],
     entry_points={'console_scripts': [
         'tetris = tetris.cmd:main']},
+    setup_requires=['pygame']
 )
