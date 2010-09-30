@@ -40,21 +40,25 @@ class TetrisShape(object):
         self.dead = False
 
     def move(self, dx, dy):
-        if self.check_collision():
-            for rect in self.rects.values():
-                ocupado[rect.posX, rect.posY] = rect
-                self.dead = True
+        if self.check_collision(dx, dy):
+            if dy != 0:
+                for rect in self.rects.values():
+                    ocupado[rect.posX, rect.posY] = rect
+                    self.dead = True
             return
         for rect in self.rects.values():
             rect.posX += dx
             rect.posY += dy
 
-    def check_collision(self):
-        slist = sorted(self.rects.keys())
-        last_block = self.rects[slist[-1]]
-        hit_bottom = last_block.posY + 1 >= num_vert_squares 
-        hit_others = ocupado.get((last_block.posX, last_block.posY), False)
-        return hit_bottom or hit_others
+    def check_collision(self, dx, dy):
+        for rect in self.rects.values():
+            if rect.posY + dy >= num_vert_squares:
+                return True
+            if not (0 <= rect.posX + dx < num_horiz_squares):
+                return True
+            if ocupado.get((rect.posX+dx, rect.posY+dy), False):
+                return True
+        return False
 
     def blit_to(self, screen):
         for rect in self.rects.values():
