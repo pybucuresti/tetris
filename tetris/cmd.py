@@ -12,6 +12,8 @@ num_vert_squares = 25
 
 screen_size = width, height = num_horiz_squares*square_size, num_vert_squares*square_size
 
+ocupado = {}
+
 UP_ARROW = 273
 LEFT_ARROW = 276
 DOWN_ARROW = 274
@@ -35,12 +37,24 @@ class TetrisShape(object):
             (1,1): MyRectangle(square, 5, 1),
             (1,2): MyRectangle(square, 5, 2),
         }
+        self.dead = False
 
     def move(self, dx, dy):
-        new_rects = {}
+        if self.check_collision():
+            for rect in self.rects.values():
+                ocupado[rect.posX, rect.posY] = rect
+                self.dead = True
+            return
         for rect in self.rects.values():
             rect.posX += dx
             rect.posY += dy
+
+    def check_collision(self):
+        slist = sorted(self.rects.keys())
+        last_block = self.rects[slist[-1]]
+        hit_bottom = last_block.posY + 1 >= num_vert_squares 
+        hit_others = ocupado.get((last_block.posX, last_block.posY), False)
+        return hit_bottom or hit_others
 
     def blit_to(self, screen):
         for rect in self.rects.values():
@@ -55,6 +69,8 @@ def main():
     pygame.time.set_timer(pygame.USEREVENT, 500)
     my_shape = TetrisShape(blue_square)
     while True:
+        if my_shape.dead:
+            my_shape = TetrisShape(blue_square)
         event = pygame.event.wait()
         if event.type == pygame.KEYUP:
             if event.key == DOWN_ARROW:
@@ -63,10 +79,14 @@ def main():
                my_shape.move(-1, 0)
             if event.key == RIGHT_ARROW:
                my_shape.move(1, 0)
+            if event.key == pygame.K_ESCAPE:
+                sys.exit(1)
         elif event.type == pygame.QUIT: sys.exit()
         elif event.type == pygame.USEREVENT:
             my_shape.move(0, 1)
 
         screen.fill(black)
         my_shape.blit_to(screen)
+        for dead_square in ocupado.values():
+            dead_square.blit_to(screen)
         pygame.display.flip()
