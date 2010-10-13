@@ -28,6 +28,8 @@ LEFT_ARROW = 276
 DOWN_ARROW = 274
 RIGHT_ARROW = 275
 
+dead_lines = []
+
 def handle_complete_line():
     complete_squares = dict()
     for tup in ocupado:
@@ -38,7 +40,24 @@ def handle_complete_line():
             complete_squares[y] = 1
     for line in complete_squares:
         if complete_squares[line] == num_horiz_squares:
-            print 'Linia: %s' % line
+            dead_lines.append(line)
+
+def clean_ocupado():
+    global ocupado
+    new_ocupado = {}
+    for line in dead_lines:
+        for x, y in ocupado.keys():
+            if y < line:
+                updated_rect = ocupado[(x, y)]
+                updated_rect.posY += 1
+                new_ocupado[(x, y + 1)] = updated_rect
+            elif y > line:
+                new_ocupado[(x, y)] = ocupado[(x, y)]
+    dead_lines[:] = []
+
+    if new_ocupado:
+        ocupado = new_ocupado
+                 
 
 class MyRectangle(object):
     def __init__(self, square, posX, posY):
@@ -60,7 +79,8 @@ rects_list = {'snake1': ((0, 0), (0, 1), (1, 1), (1, 2)),
 
 class TetrisShape(object):
     def __init__(self):
-        key = choice(rects_list.keys())
+        #key = choice(rects_list.keys())
+        key = 'lshape1'
         self.rects = []
         for i, (x, y) in enumerate(rects_list[key]):
             self.rects.append(MyRectangle(squares.values()[i], x + 4, y))
@@ -154,6 +174,7 @@ def main():
 
         screen.fill(black)
         my_shape.blit_to(screen)
-        for dead_square in ocupado.values():
-            dead_square.blit_to(screen)
+        clean_ocupado()
+        for square in ocupado.values():
+            square.blit_to(screen)
         pygame.display.flip()
