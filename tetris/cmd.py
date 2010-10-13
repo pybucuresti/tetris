@@ -50,7 +50,11 @@ def handle_complete_line():
             complete_squares[y] = 1
     for line in complete_squares:
         if complete_squares[line] == num_horiz_squares:
-            dead_lines.append((line, 3))
+            for other_line, time in dead_lines:
+                if line == other_line:
+                    break
+            else:
+                dead_lines.append((line, 3))
 
 def clean_ocupado():
     global ocupado
