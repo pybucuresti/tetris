@@ -1,7 +1,7 @@
 import os
 import sys
 import pygame
-from random import randint
+from random import choice
 
 ROOT_PATH = os.path.dirname(__file__) + '/'
 square_size = 16
@@ -16,6 +16,10 @@ red_square = pygame.image.load(ROOT_PATH + 'images/square-16x16-red.png')
 green_square = pygame.image.load(ROOT_PATH + 'images/square-16x16-green.png')
 yellow_square = pygame.image.load(ROOT_PATH + 'images/square-16x16-yellow.png')
 blue_square = pygame.image.load(ROOT_PATH + 'images/square-16x16-blue.png')
+squares = {'red': red_square,
+           'green': green_square,
+           'yellow': yellow_square,
+           'blue': blue_square}
 
 ocupado = {}
 
@@ -34,14 +38,21 @@ class MyRectangle(object):
         rect = self.square.get_rect().move([self.posX*square_size, self.posY*square_size])
         screen.blit(self.square, rect)
 
+rects_list = {'snake1': ((0, 0), (0, 1), (1, 1), (1, 2)),
+              'snake2': ((1, 0), (0, 1), (1, 1), (0, 2)),
+              'bar': ((0, 0), (0, 1), (0, 2), (0, 3)),
+              'tshape': ((0, 0), (0, 2), (0, 1), (1, 1)),
+              'lshape1': ((0, 0), (0, 2), (0, 1), (1, 0)),
+              'lshape2': ((0, 0), (0, 1), (1, 0), (2, 0)),
+              'box': ((0, 0), (0, 1), (1, 1), (1, 0))}
+
 class TetrisShape(object):
     def __init__(self):
-        self.rects = (
-            MyRectangle(red_square, 4, 0),
-            MyRectangle(green_square, 4, 1),
-            MyRectangle(yellow_square, 5, 1),
-            MyRectangle(blue_square, 5, 2),
-        )
+        key = choice(rects_list.keys())
+        self.rects = []
+        for i, (x, y) in enumerate(rects_list[key]):
+            self.rects.append(MyRectangle(squares.values()[i], x + 4, y))
+        self.rects = tuple(self.rects)
         self.dead = False
         self.center = 2
 
@@ -55,6 +66,12 @@ class TetrisShape(object):
         for rect in self.rects:
             rect.posX += dx
             rect.posY += dy
+
+    def drop_all_the_way(self):
+        while True:
+            self.move(0,1)
+            if self.dead:
+                return
 
     def check_collision(self, dx, dy):
         for rect in self.rects:
@@ -82,6 +99,11 @@ class TetrisShape(object):
                     (0, -1): (1, 0),
                     (1, 0): (0, 1),
                     (0, 1): (-1, 0),
+
+                    (-2, 0): (0, -2),
+                    (0, -2): (2, 0),
+                    (2, 0): (0, 2),
+                    (0, 2): (-2, 0),
                 }
                 change = changes[(delta_x, delta_y)]
                 rect.posX = center_rect.posX + change[0]
@@ -106,7 +128,7 @@ def main():
             if event.key == UP_ARROW:
                my_shape.rotate()
             if event.key == DOWN_ARROW:
-               my_shape.move(0, 1)
+               my_shape.drop_all_the_way()
             if event.key == LEFT_ARROW:
                my_shape.move(-1, 0)
             if event.key == RIGHT_ARROW:
