@@ -40,12 +40,18 @@ def handle_complete_line():
             complete_squares[y] = 1
     for line in complete_squares:
         if complete_squares[line] == num_horiz_squares:
-            dead_lines.append(line)
+            dead_lines.append((line, 3))
 
 def clean_ocupado():
     global ocupado
+    global dead_lines
     new_ocupado = {}
-    for line in dead_lines:
+    new_dead_lines = []
+    for line, timer in sorted(dead_lines):
+        if timer > 0:
+            timer -= 1
+            new_dead_lines.append((line, timer))
+            continue
         for x, y in ocupado.keys():
             if y < line:
                 updated_rect = ocupado[(x, y)]
@@ -53,7 +59,11 @@ def clean_ocupado():
                 new_ocupado[(x, y + 1)] = updated_rect
             elif y > line:
                 new_ocupado[(x, y)] = ocupado[(x, y)]
-    dead_lines[:] = []
+        ocupado = new_ocupado
+        new_ocupado = {}
+    
+    dead_lines = new_dead_lines
+    #dead_lines[:] = []
 
     if new_ocupado:
         ocupado = new_ocupado
@@ -175,6 +185,10 @@ def main():
         screen.fill(black)
         my_shape.blit_to(screen)
         clean_ocupado()
+        excluded_lines = [line for line, timer in dead_lines if timer % 2 == 0]
         for square in ocupado.values():
+            if square.posY in excluded_lines:
+                continue
             square.blit_to(screen)
+                    
         pygame.display.flip()
