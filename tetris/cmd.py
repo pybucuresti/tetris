@@ -28,6 +28,18 @@ LEFT_ARROW = 276
 DOWN_ARROW = 274
 RIGHT_ARROW = 275
 
+def handle_complete_line():
+    complete_squares = dict()
+    for tup in ocupado:
+        x, y = tup
+        if y in complete_squares:
+            complete_squares[y] += 1
+        else:
+            complete_squares[y] = 1
+    for line in complete_squares:
+        if complete_squares[line] == num_horiz_squares:
+            print 'Linia: %s' % line
+
 class MyRectangle(object):
     def __init__(self, square, posX, posY):
         self.posX = posX
@@ -122,6 +134,7 @@ def main():
     my_shape = TetrisShape()
     while True:
         if my_shape.dead:
+            handle_complete_line()
             my_shape = TetrisShape()
         event = pygame.event.wait()
         if event.type == pygame.KEYUP:
