@@ -106,11 +106,11 @@ rects_list = {'snake1': ((0, 0), (0, 1), (1, 1), (1, 2)),
 class TetrisShape(object):
     def __init__(self):
         global running
-        #key = choice(rects_list.keys())
-        key = 'bar'
+        key = choice(rects_list.keys())
         self.rects = []
+        my_square = choice(squares.values())
         for i, (x, y) in enumerate(rects_list[key]):
-            self.rects.append(MyRectangle(squares.values()[i], x + 4, y))
+            self.rects.append(MyRectangle(my_square, x + 4, y))
         self.rects = tuple(self.rects)
         self.dead = False
         self.center = 2
