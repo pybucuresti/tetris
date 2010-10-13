@@ -30,6 +30,16 @@ RIGHT_ARROW = 275
 
 dead_lines = []
 
+def check_collision(potential_rects):
+    for posX, posY in potential_rects:
+        if posY >= num_vert_squares:
+            return True
+        if not (0 <= posX < num_horiz_squares):
+            return True
+        if ocupado.get((posX, posY), False):
+            return True
+    return False
+
 def handle_complete_line():
     complete_squares = dict()
     for tup in ocupado:
@@ -90,7 +100,7 @@ rects_list = {'snake1': ((0, 0), (0, 1), (1, 1), (1, 2)),
 class TetrisShape(object):
     def __init__(self):
         #key = choice(rects_list.keys())
-        key = 'lshape1'
+        key = 'bar'
         self.rects = []
         for i, (x, y) in enumerate(rects_list[key]):
             self.rects.append(MyRectangle(squares.values()[i], x + 4, y))
@@ -99,7 +109,10 @@ class TetrisShape(object):
         self.center = 2
 
     def move(self, dx, dy):
-        if self.check_collision(dx, dy):
+        potential_rects = []
+        for rect in self.rects:
+            potential_rects.append((rect.posX+dx, rect.posY+dy))
+        if check_collision(potential_rects):
             if dy != 0:
                 for rect in self.rects:
                     ocupado[rect.posX, rect.posY] = rect
@@ -115,41 +128,45 @@ class TetrisShape(object):
             if self.dead:
                 return
 
-    def check_collision(self, dx, dy):
-        for rect in self.rects:
-            if rect.posY + dy >= num_vert_squares:
-                return True
-            if not (0 <= rect.posX + dx < num_horiz_squares):
-                return True
-            if ocupado.get((rect.posX+dx, rect.posY+dy), False):
-                return True
-        return False
-
     def rotate(self):
+        changes = {
+            (-1, -1): (1, -1),
+            (1, -1): (1, 1),
+            (1, 1): (-1, 1),
+            (-1, 1): (-1, -1),
+
+            (-1, 0): (0, -1),
+            (0, -1): (1, 0),
+            (1, 0): (0, 1),
+            (0, 1): (-1, 0),
+
+            (-2, 0): (0, -2),
+            (0, -2): (2, 0),
+            (2, 0): (0, 2),
+            (0, 2): (-2, 0),
+        }
+
+        def calculate_change(rect, center_rect):
+            if rect == center_rect:
+                return (0, 0)
+            delta_x = rect.posX - center_rect.posX
+            delta_y = rect.posY - center_rect.posY
+            change = changes[(delta_x, delta_y)]
+            return change
+
         center_rect = self.rects[self.center]
+        potential_rects = []
         for rect in self.rects:
-            if rect != center_rect:
-                delta_x = rect.posX - center_rect.posX
-                delta_y = rect.posY - center_rect.posY
-                changes = {
-                    (-1, -1): (1, -1),
-                    (1, -1): (1, 1),
-                    (1, 1): (-1, 1),
-                    (-1, 1): (-1, -1),
+            change = calculate_change(rect, center_rect)
+            potential_rects.append((center_rect.posX + change[0],
+                                    center_rect.posY + change[1]))
+        if check_collision(potential_rects):
+            return
 
-                    (-1, 0): (0, -1),
-                    (0, -1): (1, 0),
-                    (1, 0): (0, 1),
-                    (0, 1): (-1, 0),
-
-                    (-2, 0): (0, -2),
-                    (0, -2): (2, 0),
-                    (2, 0): (0, 2),
-                    (0, 2): (-2, 0),
-                }
-                change = changes[(delta_x, delta_y)]
-                rect.posX = center_rect.posX + change[0]
-                rect.posY = center_rect.posY + change[1]
+        for rect in self.rects:
+            change = calculate_change(rect, center_rect)
+            rect.posX = center_rect.posX + change[0]
+            rect.posY = center_rect.posY + change[1]
 
     def blit_to(self, screen):
         for rect in self.rects:
