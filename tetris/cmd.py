@@ -10,6 +10,8 @@ black = 0, 0, 0
 num_horiz_squares = 10
 num_vert_squares = 25
 
+running = True
+
 screen_size = width, height = num_horiz_squares*square_size, num_vert_squares*square_size
 
 red_square = pygame.image.load(ROOT_PATH + 'images/square-16x16-red.png')
@@ -103,6 +105,7 @@ rects_list = {'snake1': ((0, 0), (0, 1), (1, 1), (1, 2)),
 
 class TetrisShape(object):
     def __init__(self):
+        global running
         #key = choice(rects_list.keys())
         key = 'bar'
         self.rects = []
@@ -111,6 +114,8 @@ class TetrisShape(object):
         self.rects = tuple(self.rects)
         self.dead = False
         self.center = 2
+        if check_collision((r.posX, r.posY) for r in self.rects):
+            running = False
 
     def move(self, dx, dy):
         potential_rects = []
@@ -183,7 +188,7 @@ def main():
 
     pygame.time.set_timer(pygame.USEREVENT, 500)
     my_shape = TetrisShape()
-    while True:
+    while running:
         if my_shape.dead:
             handle_complete_line()
             my_shape = TetrisShape()
@@ -213,3 +218,13 @@ def main():
             square.blit_to(screen)
                     
         pygame.display.flip()
+    print "Game over!"
+    game_over_image = pygame.image.load(ROOT_PATH + 'images/button.png')
+    screen.blit(game_over_image, game_over_image.get_rect())
+    pygame.display.flip()
+    while True:
+        event = pygame.event.wait()
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_ESCAPE:
+                sys.exit(1)
+        elif event.type == pygame.QUIT: sys.exit()
